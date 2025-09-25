@@ -9,7 +9,8 @@
     removeHole,
     addPlayer,
     removePlayer,
-    resetScorecard
+    resetScorecard,
+    downloadScorecardCsv
   } from '$lib/scorecard';
 
   $: totalPar = $scorecard.holes.reduce((total, hole) => total + hole.par, 0);
@@ -17,6 +18,7 @@
   $: canRemoveHole = $scorecard.holes.length > 1;
   $: canAddPlayer = $scorecard.players.length < 6;
   $: canRemovePlayer = $scorecard.players.length > 1;
+  $: canExportCsv = $scorecard.players.length > 0 && $scorecard.holes.length > 0;
   $: playerSummaries = $scorecard.players.map((player, index) => {
     const total = player.strokes.reduce((sum, strokes) => sum + strokes, 0);
     const relative = total - totalPar;
@@ -179,9 +181,19 @@
           <i class="bi bi-dash-circle me-2"></i>Remove Last Hole
         </button>
       </div>
-      <button class="btn btn-outline-danger" type="button" on:click={resetScorecard}>
-        <i class="bi bi-arrow-counterclockwise me-2"></i>Reset Card
-      </button>
+      <div class="d-flex gap-2">
+        <button
+          class="btn btn-outline-primary"
+          type="button"
+          on:click={downloadScorecardCsv}
+          disabled={!canExportCsv}
+        >
+          <i class="bi bi-download me-2"></i>Export CSV
+        </button>
+        <button class="btn btn-outline-danger" type="button" on:click={resetScorecard}>
+          <i class="bi bi-arrow-counterclockwise me-2"></i>Reset Card
+        </button>
+      </div>
     </div>
   </div>
 </div>

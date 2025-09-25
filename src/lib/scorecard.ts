@@ -1,4 +1,4 @@
-import { writable } from 'svelte/store';
+import { writable, get } from 'svelte/store';
 import type { HoleInfo, PlayerScore, Scorecard } from './types';
 
 const STORAGE_KEY = 'golf-scorecard';
@@ -31,6 +31,44 @@ const createDefaultScorecard = (): Scorecard => ({
   holes: createDefaultHoles(),
   players: [createDefaultPlayer(1, DEFAULT_HOLES)]
 });
+
+const escapeCsvValue = (value: string | number): string => {
+  const stringValue = String(value ?? '');
+  const escaped = stringValue.replace(/"/g, '""');
+  return /[",\n]/.test(escaped) ? `"${escaped}"` : escaped;
+};
+
+const buildCsvRow = (values: Array<string | number>): string =>
+  values.map(escapeCsvValue).join(',');
+
+const getPlayerLabel = (player: PlayerScore, index: number): string => {
+  const trimmed = player.name?.trim();
+  return trimmed && trimmed.length > 0 ? trimmed : `Player ${index + 1}`;
+};
+
+const formatRelativeScore = (total: number, par: number): string => {
+  const relative = total - par;
+  if (relative === 0) {
+    return 'E';
+  }
+
+  return relative > 0 ? `+${relative}` : String(relative);
+};
+
+const slugify = (value: string): string => {
+  const slug = value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+  return slug.length > 0 ? slug : 'golf-scorecard';
+};
+
+const buildCsvFilename = (courseName: string): string => {
+  const today = new Date().toISOString().slice(0, 10);
+  return `${slugify(courseName)}-${today}.csv`;
+};
 
 type PersistedHole = Partial<HoleInfo & { par: number }>;
 type PersistedPlayer = Partial<PlayerScore & { strokes: number[] }>;
@@ -271,4 +309,76 @@ export const removePlayer = (playerId: string) => {
 
 export const resetScorecard = () => {
   scorecard.set(createDefaultScorecard());
+};
+
+export const createScorecardCsv = (data: Scorecard): string => {
+  if (data.holes.length === 0) {
+    return buildCsvRow(['Course Name', data.courseName ?? '']);
+  }
+
+  const holeHeaders = data.holes.map((hole) => `Hole ${hole.number}`);
+  const parValues = data.holes.map((hole) => hole.par);
+  const totalPar = parValues.reduce((total, par) => total + par, 0);
+
+  const rows: string[] = [];
+  rows.push(buildCsvRow(['Course Name', data.courseName ?? '']));
+  rows.push(buildCsvRow(['Total Holes', data.holes.length]));
+  rows.push('');
+  rows.push(buildCsvRow(['Player', ...holeHeaders, 'Total', 'Relative']));
+  rows.push(buildCsvRow(['Par', ...parValues, totalPar, formatRelativeScore(totalPar, totalPar)]));
+
+  data.players.forEach((player, index) => {
+    const strokes = data.holes.map((_, holeIndex) => {
+      const value = player.strokes[holeIndex];
+      return typeof value === 'number' && Number.isFinite(value) ? value : 0;
+    });
+
+    const playerTotal = strokes.reduce((sum, strokesForHole) => sum + strokesForHole, 0);
+    rows.push(
+      buildCsvRow([
+        getPlayerLabel(player, index),
+        ...strokes,
+        playerTotal,
+        formatRelativeScore(playerTotal, totalPar)
+      ])
+    );
+  });
+
+  return rows.join('\n');
+};
+
+export const downloadScorecardCsv = () => {
+  if (typeof document === 'undefined') {
+    return;
+  }
+
+  const current = get(scorecard);
+  if (!current.holes.length || !current.players.length) {
+    return;
+  }
+
+  const csvContent = createScorecardCsv(current);
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+
+  const urlCreator = typeof URL !== 'undefined' ? URL : undefined;
+  if (!urlCreator || typeof urlCreator.createObjectURL !== 'function') {
+    return;
+  }
+
+  const href = urlCreator.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = href;
+  link.download = buildCsvFilename(current.courseName);
+  link.style.display = 'none';
+
+  const body = document.body;
+  if (!body) {
+    urlCreator.revokeObjectURL(href);
+    return;
+  }
+
+  body.appendChild(link);
+  link.click();
+  body.removeChild(link);
+  urlCreator.revokeObjectURL(href);
 };

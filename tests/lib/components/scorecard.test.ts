@@ -10,7 +10,8 @@ import {
   removeHole,
   addPlayer,
   removePlayer,
-  resetScorecard
+  resetScorecard,
+  createScorecardCsv
 } from '$lib/scorecard';
 import type { Scorecard } from '$lib/types';
 
@@ -108,5 +109,37 @@ describe('scorecard store', () => {
       expect(hole.par).toBe(4);
       expect(current.players[0].strokes[index]).toBe(0);
     });
+  });
+
+  it('creates CSV output with course details and relative scores', () => {
+    const csv = createScorecardCsv({
+      courseName: 'Pebble Beach',
+      holes: [
+        { number: 1, par: 4 },
+        { number: 2, par: 3 }
+      ],
+      players: [
+        { id: 'p1', name: 'Jordan Spieth', strokes: [4, 3] },
+        { id: 'p2', name: '', strokes: [5, 4] }
+      ]
+    });
+
+    expect(csv).toContain('Course Name,Pebble Beach');
+    expect(csv).toContain('Player,Hole 1,Hole 2,Total,Relative');
+    expect(csv).toContain('Par,4,3,7,E');
+    expect(csv).toContain('Jordan Spieth,4,3,7,E');
+    expect(csv).toContain('Player 2,5,4,9,+2');
+  });
+
+  it('escapes commas and quotes when generating CSV', () => {
+    const csv = createScorecardCsv({
+      courseName: 'Links, "Course"',
+      holes: [{ number: 1, par: 4 }],
+      players: [{ id: 'p1', name: 'Ann, "Ace"', strokes: [4] }]
+    });
+
+    const lines = csv.split('\n');
+    expect(lines[0]).toBe('Course Name,"Links, ""Course"""');
+    expect(lines[5]).toBe('"Ann, ""Ace""",4,4,E');
   });
 });
