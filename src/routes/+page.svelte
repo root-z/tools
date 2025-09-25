@@ -16,6 +16,12 @@
       name: 'Activity Tracker',
       description: 'Track and manage your time efficiently',
       icon: 'bi-stopwatch'
+    },
+    {
+      id: 'golf-scorecard',
+      name: 'Golf Scorecard',
+      description: 'Keep par, strokes, and totals for every round',
+      icon: 'bi-flag'
     }
   ];
   
