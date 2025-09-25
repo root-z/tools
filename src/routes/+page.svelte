@@ -16,8 +16,7 @@
       name: 'Activity Tracker',
       description: 'Track and manage your time efficiently',
       icon: 'bi-stopwatch'
-    },
-    // Placeholder for future tools
+    }
   ];
   
   // Navigation function
