@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import logoUrl from '$lib/assets/logo.png';
   
   // Tool types definition
   interface Tool {
@@ -39,6 +39,9 @@
   <div class="row justify-content-center">
     <div class="col-12 col-lg-10">
       <div class="text-center mb-5">
+        <div class="logo-wrapper">
+          <img src={logoUrl} alt="Tracker logo" class="site-logo" />
+        </div>
         <h1 class="display-4">Tools Selection</h1>
         <p class="lead">Select a tool to get started</p>
       </div>
@@ -84,5 +87,17 @@
     border-radius: 50%;
     background-color: rgba(var(--bs-primary-rgb), 0.1);
     color: var(--bs-primary);
+  }
+
+  .logo-wrapper {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+  }
+
+  .site-logo {
+    width: min(160px, 40vw);
+    height: auto;
+    filter: drop-shadow(0 8px 12px rgba(0,0,0,0.12));
   }
 </style>
