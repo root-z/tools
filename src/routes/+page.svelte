@@ -22,6 +22,12 @@
       name: 'Golf Scorecard',
       description: 'Keep par, strokes, and totals for every round',
       icon: 'bi-flag'
+    },
+    {
+      id: 'mortgage-calculator',
+      name: 'Mortgage Calculator',
+      description: 'Estimate mortgage payments and payoff timelines',
+      icon: 'bi-house'
     }
   ];
   

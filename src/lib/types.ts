@@ -25,3 +25,30 @@ export interface Scorecard {
   holes: HoleInfo[];
   players: PlayerScore[];
 }
+
+export interface MortgageInput {
+  principal: number;
+  annualInterestRate: number;
+  termYears: number;
+  extraMonthlyPayment?: number;
+}
+
+export interface AmortizationRow {
+  month: number;
+  interestPaid: number;
+  principalPaid: number;
+  extraPayment: number;
+  totalPayment: number;
+  remainingBalance: number;
+}
+
+export interface MortgageSummary {
+  monthlyPayment: number;
+  extraMonthlyPayment: number;
+  payoffMonths: number;
+  totalInterest: number;
+  totalPaid: number;
+  baselineMonths: number;
+  interestSaved: number;
+  schedule: AmortizationRow[];
+}
